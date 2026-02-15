@@ -166,8 +166,8 @@ def init_pay(
             )
         return HTMLResponse(
             content=(
-                '<html><body><script>window.location.href="/pay/checkout";</script>'
-                '<p>Redirecting to checkout...</p></body></html>'
+                '<html><body><script>window.location.href="/pricing";</script>'
+                '<p>Redirecting to pricing...</p></body></html>'
             ),
             status_code=403,
         )
