@@ -7,11 +7,20 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-# Force dev mode for tests
-os.environ.pop("STRIPE_SECRET_KEY", None)
-os.environ.pop("STRIPE_WEBHOOK_SECRET", None)
+# Save real keys before clearing for dev-mode tests
+_saved_stripe_key = os.environ.pop("STRIPE_SECRET_KEY", None)
+_saved_webhook_secret = os.environ.pop("STRIPE_WEBHOOK_SECRET", None)
+_saved_publishable_key = os.environ.get("STRIPE_PUBLISHABLE_KEY")
 
 from viv_pay import init_pay
+
+
+def get_saved_stripe_key():
+    return _saved_stripe_key
+
+
+def get_saved_publishable_key():
+    return _saved_publishable_key
 
 
 @pytest.fixture
