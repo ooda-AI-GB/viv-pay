@@ -1,4 +1,5 @@
 import logging
+import os
 
 from fastapi import Request
 
@@ -14,7 +15,7 @@ class PaymentRequired(Exception):
 
 
 class MockSubscription:
-    """Returned in dev mode when no real subscription exists."""
+    """Returned in dev mode or API token auth when no real subscription exists."""
 
     def __init__(self, user_id: int):
         self.id = 0
@@ -27,6 +28,17 @@ class MockSubscription:
         self.cancel_at = None
 
 
+def _check_api_token(request: Request) -> bool:
+    """Check if request has a valid GDEV_API_TOKEN Bearer token."""
+    token = os.environ.get("GDEV_API_TOKEN")
+    if not token:
+        return False
+    auth_header = request.headers.get("authorization", "")
+    if auth_header.startswith("Bearer "):
+        return auth_header[7:] == token
+    return False
+
+
 def create_require_subscription(
     get_db, StripeCustomer, Subscription, config: PayConfig
 ):
@@ -35,6 +47,11 @@ def create_require_subscription(
     async def require_subscription(
         request: Request, user_id: int | None = None
     ):
+        # API token auth — bypass subscription check entirely
+        if _check_api_token(request):
+            logger.info("[viv-pay] API token auth — subscription check bypassed")
+            return MockSubscription(user_id or 0)
+
         # Try to get user_id from query param, header, or cookie
         if user_id is None:
             user_id = request.query_params.get("user_id")
